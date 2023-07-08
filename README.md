@@ -205,9 +205,9 @@ command=$2
 if [ "$command" = "start" ]; then
     # Disables cores for the host system
     # Your command here
-    systemctl set-property --runtime -- system.slice AllowedCPUs=4,5,6,7
-    systemctl set-property --runtime -- user.slice AllowedCPUs=4,5,6,7
-    systemctl set-property --runtime -- init.scope AllowedCPUs=4,5,6,7
+    systemctl set-property --runtime -- system.slice AllowedCPUs=0,1,2,3
+    systemctl set-property --runtime -- user.slice AllowedCPUs=0,1,2,3
+    systemctl set-property --runtime -- init.scope AllowedCPUs=0,1,2,3
 fi
 
 # When shutting down the VM
