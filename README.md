@@ -17,15 +17,15 @@ I had two main sources of information on YouTube, a quicker one and a more detai
 2. [Installing Virt-Manager](#installing-virt-manager)
 3. [Downloading the desired ISO](#downloading-the-desired-iso)
 4. [Creating your first virtual machine](#creating-your-first-virtual-machine)
-5. [Problems and solutions](#problems-and-solutions)
-6. [Scripts and code samples](#scripts-and-code-samples)
-7. [Additional resources](#additional-resources)
+5. [Optimizations](#optimizations)
+6. [Problems and solutions](#problems-and-solutions)
+7. [Scripts and code samples](#scripts-and-code-samples)
 
 ## Checking virtualization support
 
-The first step before installing QEMU and KVM is to check if your machine supports virtualization. Here's how to do it...
+The first step before installing QEMU and KVM is to check if your machine supports virtualization.
 
-_Fill in this section with detailed instructions._
+_instructions._
 
 ## Installing Virt-Manager
 
