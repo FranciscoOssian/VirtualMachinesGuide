@@ -64,7 +64,7 @@ I always leave the Network option on NAT, as it covers all my cases. I don't pla
 
 ## Optimizations
 
-## bottlenecks, running a VM on host with 8-core processor
+## bottlenecks, running a VM on host with 4-core processor
 
 I use a script to allocate half of the cores exclusively to the VM upon startup, leveraging systemd and libvirt's hooks. If only one VM is running, it utilizes half of the CPU power.
 
