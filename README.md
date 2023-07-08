@@ -92,6 +92,15 @@ This tell to to libvirt that the emulated processor will have 4 cores, pointed t
 
 To know what is the best range to use in VMs. Choose a range that have the same L3 cache. In my case is any.
 
+Make sure that Virt Manager know about the virtual processor topology. 
+```xml
+  <cpu ...args>
+    <topology sockets="1" dies="1" cores="4" threads="1"/>
+  </cpu>
+```
+4 cores, defined in `cputune`
+
+
 ```shell
 ➜  ~ lscpu -e
 CPU NODE SOCKET CORE L1d:L1i:L2:L3 ONLINE    MAXMHZ   MINMHZ       MHZ
