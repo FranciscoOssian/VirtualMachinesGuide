@@ -19,7 +19,8 @@ I had two main sources of information on YouTube, a quicker one and a more detai
 4. [Creating your first virtual machine](#creating-your-first-virtual-machine)
 5. [Optimizations](#optimizations)
 6. [Problems and solutions](#problems-and-solutions)
-7. [Scripts and code samples](#scripts-and-code-samples)
+7. [Running Win11](#running-win11)
+8. [Scripts and code samples](#scripts-and-code-samples)
 
 ## Checking virtualization support
 
