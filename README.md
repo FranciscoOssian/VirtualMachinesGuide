@@ -83,9 +83,9 @@ CPU NODE SOCKET CORE L1d:L1i:L2:L3 ONLINE    MAXMHZ   MINMHZ       MHZ
 ➜  ~
 ```
 
-Here we can observe that my processor has 4 cores, each having 2 threads (Simultaneous Multi-threading).
+Here we can see that my processor has 4 cores, each with 2 threads (Concurrent Multi-threading).
 
-You can analyze on your computer, which is easier to understand using `lstopo` - a command from the `hwloc` package. It displays this information graphically.
+You can see on your computer, which is easier to understand using `lstopo` - a command from the `hwloc` package. It displays this information graphically.
 
 ```shell
 ➜  ~ lstopo-no-graphics     
