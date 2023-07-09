@@ -19,7 +19,7 @@ I had two main sources of information on YouTube, a quicker one and a more detai
 4. [Creating your first virtual machine](#creating-your-first-virtual-machine)
 5. [Optimizations](#optimizations)
 6. [Problems and solutions](#problems-and-solutions)
-7. [Running Win11](#running-win11)
+7. [Guess is Win11](#guess-is-win11)
 8. [Scripts and code samples](#scripts-and-code-samples)
 
 ## Checking virtualization support
@@ -64,43 +64,11 @@ I always leave the Network option on NAT, as it covers all my cases. I don't pla
 
 ## Optimizations
 
-## bottlenecks, running a VM on host with 4-core processor
+### Bottlenecks, running a VM on a host with a 4-core processor
 
-I use a script to allocate half of the cores exclusively to the VM upon startup, leveraging systemd and libvirt's hooks. If only one VM is running, it utilizes half of the CPU power.
+Without any of the listed optimizations, heavier VMs such as Windows 11 won't function properly on my computer. I'm using a quad-core Intel i5-8250U processor.
 
-**Pseudocode:**
-
-1. On VM start: Restrict host system to use only half of the CPUs (0 to N).
-2. On VM shutdown: If no other VMs are active, allow host system to use all CPUs. If other VMs are still running, maintain the current CPU allocation.
-
-More details can be found in the 'Scripts and code samples' section.
-
-In the CPU topology of the VM, I've created an XML CPU pin configuration to map the CPU, telling libvirt that the emulated processor will have 4 cores, which are set to use only the chosen cores.
-
-```xml
-  <vcpu placement="static">4</vcpu>
-  <cputune>
-    <vcpupin vcpu="0" cpuset="4"/>
-    <vcpupin vcpu="1" cpuset="5"/>
-    <vcpupin vcpu="2" cpuset="6"/>
-    <vcpupin vcpu="3" cpuset="7"/>
-    <emulatorpin cpuset="0-3"/>
-  </cputune>
-```
-
-This tell to to libvirt that the emulated processor will have 4 cores, pointed to use just the choosed cores.
-
-To know what is the best range to use in VMs. Choose a range that have the same L3 cache. In my case is any.
-
-Make sure that Virt Manager know about the virtual processor topology. 
-```xml
-  <cpu ...args>
-    <topology sockets="1" dies="1" cores="4" threads="1"/>
-  </cpu>
-```
-4 cores, defined in `cputune`
-
-
+Here's the topology of my processor:
 ```shell
 ➜  ~ lscpu -e
 CPU NODE SOCKET CORE L1d:L1i:L2:L3 ONLINE    MAXMHZ   MINMHZ       MHZ
@@ -115,11 +83,86 @@ CPU NODE SOCKET CORE L1d:L1i:L2:L3 ONLINE    MAXMHZ   MINMHZ       MHZ
 ➜  ~
 ```
 
+Here we can observe that my processor has 4 cores, each having 2 threads (Simultaneous Multi-threading).
+
+You can analyze on your computer, which is easier to understand using `lstopo` - a command from the `hwloc` package. It displays this information graphically.
+
+```shell
+➜  ~ lstopo-no-graphics     
+Machine (xGB total)
+  Package L#0
+    NUMANode L#0 (P#0 xGB)
+    L3 L#0 (6144KB)
+      L2 L#0 (256KB) + L1d L#0 (32KB) + L1i L#0 (32KB) + Core L#0
+        PU L#0 (P#0)
+        PU L#1 (P#4)
+      L2 L#1 (256KB) + L1d L#1 (32KB) + L1i L#1 (32KB) + Core L#1
+        PU L#2 (P#1)
+        PU L#3 (P#5)
+      L2 L#2 (256KB) + L1d L#2 (32KB) + L1i L#2 (32KB) + Core L#2
+        PU L#4 (P#2)
+        PU L#5 (P#6)
+      L2 L#3 (256KB) + L1d L#3 (32KB) + L1i L#3 (32KB) + Core L#3
+        PU L#6 (P#3)
+        PU L#7 (P#7)
+```
+
+### Processor Partitioning
+
+#### Methods
+
+There are two complementary methods that I've discovered, you can use one or both together.
+
+1. [L3 Cache Optimization](#l3-cache-optimization)
+2. [Simultaneous Multi-threading (SMT) Optimization](#simultaneous-multi-threading-smt-optimization)
+
+These methods optimize VM performance by minimizing resource contention between the host and the guest. The SMT optimization in particular is beneficial for processors that divide a single core into two or more threads, essentially virtualizing more CPUs to the operating system.
+
+#### L3 Cache Optimization
+
+L3 is a slower cache but has more space and is shared across multiple cores. To streamline OS tasks, it's good for your system if the VM and Host share as many cores as possible under the same L3 cache. You can identify these scopes by running `lscpu -e` or `lstopo`.
+
+#### Simultaneous Multi-threading (SMT) Optimization
+
+Some processors have more than one thread within a single core. For better optimization, it's best to ensure that host and guest don't share threads from the same core.
+
+#### Results
+
+After applying both optimizations, the assignment is as follows (for my Host and Guess):
+
+```shell
+Host = { 0,4,1,5 }
+Guest = { 2,6,3,7 }
+```
+
+The shell script I've developed uses systemd and libvirt hooks to manage this allocation. It restricts the host system to use the defined CPUs on VM start. On VM shutdown, if no other VMs are active, it allows the host system to use all CPUs. If other VMs are still running, it maintains the current CPU allocation.
+
+I've also configured the CPU topology and affinity for each vCPU of the VM in the VM's settings. This informs libvirt that the emulated processor will have 4 cores, which are set to use only the allocated cores.
+
+```xml
+  <vcpu placement="static">4</vcpu>
+  <cputune>
+    <vcpupin vcpu="0" cpuset="2"/>
+    <vcpupin vcpu="1" cpuset="6"/>
+    <vcpupin vcpu="2" cpuset="3"/>
+    <vcpupin vcpu="3" cpuset="7"/>
+    <emulatorpin cpuset="0-1,4-5"/>
+  </cputune>
+```
+
+Finally, Virt Manager is aware of the virtual processor topology.
+
+```xml
+  <cpu ...args>
+    <topology sockets="1" dies="1" cores="2" threads="2"/>
+  </cpu>
+```
+
 ## Problems and solutions
 
 The only problem (with no solution) that I had is the screen proportion on win11.
 
-## Running Win11
+## Guess is Win11
 
 ### TPM 2.0
 
@@ -214,9 +257,9 @@ command=$2
 if [ "$command" = "start" ]; then
     # Disables cores for the host system
     # Your command here
-    systemctl set-property --runtime -- system.slice AllowedCPUs=0,1,2,3
-    systemctl set-property --runtime -- user.slice AllowedCPUs=0,1,2,3
-    systemctl set-property --runtime -- init.scope AllowedCPUs=0,1,2,3
+    systemctl set-property --runtime -- system.slice AllowedCPUs=0,4,1,5
+    systemctl set-property --runtime -- user.slice AllowedCPUs=0,4,1,5
+    systemctl set-property --runtime -- init.scope AllowedCPUs=0,4,1,5
 fi
 
 # When shutting down the VM
