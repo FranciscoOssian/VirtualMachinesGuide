@@ -66,7 +66,7 @@ I always leave the Network option on NAT, as it covers all my cases. I don't pla
 
 ### Bottlenecks, running a VM on a host with a 4-core processor
 
-Without any of the listed optimizations, heavier VMs such as Windows 11 won't function properly on my computer. I'm using a quad-core Intel i5-8250U processor.
+Without any of the listed optimizations, heavier VMs such as Windows 11 will not work on my computer. I'm using a quad-core Intel i5-8250U processor.
 
 Here's the topology of my processor:
 ```shell
