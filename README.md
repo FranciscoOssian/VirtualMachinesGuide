@@ -238,12 +238,14 @@ If you use virtIO in disk, will need install the driver for disk when installing
 
 ➜ ~ cat /etc/libvirt/hooks/qemu
 
+script not complete, because when shutting down the VM it is not working, just when start.
+
 ```shell
 #!/bin/bash
 
 # Function to check if any VM is running
-check_vms() {
-    vms=$(virsh list --all | grep running)
+one_or_more_running() {
+    vms=$(sudo virsh list --state-running --name | tr -d '\n')
     if [ -z "$vms" ]; then
         return 1
     else
@@ -257,22 +259,25 @@ command=$2
 if [ "$command" = "start" ]; then
     # Disables cores for the host system
     # Your command here
-    systemctl set-property --runtime -- system.slice AllowedCPUs=0,4,1,5
-    systemctl set-property --runtime -- user.slice AllowedCPUs=0,4,1,5
-    systemctl set-property --runtime -- init.scope AllowedCPUs=0,4,1,5
+    sudo systemctl set-property --runtime -- system.slice AllowedCPUs=0,4,1,5
+    sudo systemctl set-property --runtime -- user.slice AllowedCPUs=0,4,1,5
+    sudo systemctl set-property --runtime -- init.scope AllowedCPUs=0,4,1,5
 fi
 
 # When shutting down the VM
 if [ "$command" = "shutdown" ]; then
     # Checks if any VM is still running
-    if check_vms; then
+    # Wait for a few seconds to give the VM time to shut down
+    sleep 6
+    if one_or_more_running; then
         echo "One or more VMs are still running"
     else
+	echo "reset"
         # If not, enables cores for the host system
         # Your command here
-        systemctl set-property --runtime -- system.slice AllowedCPUs=0-7
-        systemctl set-property --runtime -- user.slice AllowedCPUs=0-7
-        systemctl set-property --runtime -- init.scope AllowedCPUs=0-7
+        sudo systemctl set-property --runtime -- system.slice AllowedCPUs=0-7
+        sudo systemctl set-property --runtime -- user.slice AllowedCPUs=0-7
+        sudo systemctl set-property --runtime -- init.scope AllowedCPUs=0-7
     fi
 fi
 ```
